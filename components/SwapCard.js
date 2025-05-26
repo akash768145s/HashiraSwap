@@ -251,12 +251,14 @@ export default function SwapCard({
         selectedTokenIn.decimals
       );
       const isWethSwap = selectedTokenIn.symbol === "WETH";
+      const isEthSwap = selectedTokenIn.address === TOKENS.WETH.address;
 
       // Add extra validation for transaction parameters
       if (amountIn.lte(0)) {
         throw new Error("Invalid amount");
       }
 
+      // Handle WETH specific operations (commission and wrapping)
       if (isWethSwap) {
         try {
           const wethContract = new ethers.Contract(
@@ -302,12 +304,13 @@ export default function SwapCard({
           );
           await commissionTx.wait(1);
 
-          // Approve with explicit parameters
+          // Approve WETH for Uniswap router
           const allowance = await wethContract.allowance(
             account,
             uniswapRouter.address
           );
           if (allowance.lt(amountIn)) {
+            console.log("Approving WETH for Uniswap router...");
             const approveTx = await wethContract.approve(
               uniswapRouter.address,
               ethers.constants.MaxUint256,
@@ -324,10 +327,68 @@ export default function SwapCard({
             "Failed to process WETH operations. Please try again."
           );
         }
+      } else {
+        // Handle other ERC-20 token approvals (like USDT, USDC, etc.)
+        try {
+          const tokenContract = new ethers.Contract(
+            selectedTokenIn.address,
+            ERC20_ABI,
+            signer
+          );
+
+          // Check token balance
+          const tokenBalance = await tokenContract.balanceOf(account);
+          if (tokenBalance.lt(amountIn)) {
+            throw new Error(
+              `Insufficient ${
+                selectedTokenIn.symbol
+              } balance. You have ${ethers.utils.formatUnits(
+                tokenBalance,
+                selectedTokenIn.decimals
+              )} ${selectedTokenIn.symbol}`
+            );
+          }
+
+          // Check and approve token for Uniswap router
+          const allowance = await tokenContract.allowance(
+            account,
+            uniswapRouter.address
+          );
+
+          if (allowance.lt(amountIn)) {
+            console.log(
+              `Approving ${selectedTokenIn.symbol} for Uniswap router...`
+            );
+            const approveTx = await tokenContract.approve(
+              uniswapRouter.address,
+              ethers.constants.MaxUint256,
+              {
+                gasLimit: 100000,
+                gasPrice: gasPrice,
+              }
+            );
+            await approveTx.wait(1);
+            console.log(`${selectedTokenIn.symbol} approved successfully`);
+          }
+        } catch (error) {
+          console.error(`${selectedTokenIn.symbol} operation error:`, error);
+          throw new Error(
+            `Failed to process ${selectedTokenIn.symbol} operations. Please try again.`
+          );
+        }
       }
 
       // Setup swap parameters
       const path = [selectedTokenIn.address, selectedTokenOut.address];
+
+      // If neither token is WETH, route through WETH
+      if (
+        selectedTokenIn.address !== TOKENS.WETH.address &&
+        selectedTokenOut.address !== TOKENS.WETH.address
+      ) {
+        path.splice(1, 0, TOKENS.WETH.address);
+      }
+
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
       // Get amounts with retry logic
@@ -340,7 +401,21 @@ export default function SwapCard({
         amounts = await uniswapRouter.getAmountsOut(amountIn, path);
       }
 
-      const minOutput = amounts[1].mul(995).div(1000);
+      const minOutput = amounts[amounts.length - 1].mul(995).div(1000); // 0.5% slippage
+
+      console.log("Swap parameters:", {
+        amountIn: ethers.utils.formatUnits(amountIn, selectedTokenIn.decimals),
+        expectedOutput: ethers.utils.formatUnits(
+          amounts[amounts.length - 1],
+          selectedTokenOut.decimals
+        ),
+        minOutput: ethers.utils.formatUnits(
+          minOutput,
+          selectedTokenOut.decimals
+        ),
+        path: path,
+        deadline: new Date(deadline * 1000).toISOString(),
+      });
 
       // Execute swap with explicit parameters
       const swapTx = await uniswapRouter.swapExactTokensForTokens(
@@ -362,10 +437,10 @@ export default function SwapCard({
       // Success handling
       const successMessage = document.createElement("div");
       successMessage.className =
-        "fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg";
+        "fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50";
       successMessage.textContent = isWethSwap
         ? "Swap successful! Commission charged."
-        : "Swap successful!";
+        : `Swap successful! ${selectedTokenIn.symbol} → ${selectedTokenOut.symbol}`;
       document.body.appendChild(successMessage);
       setTimeout(() => successMessage.remove(), 5000);
 
@@ -385,13 +460,15 @@ export default function SwapCard({
         errorMessage += error.message;
       } else if (error.data?.message) {
         errorMessage += error.data.message;
+      } else if (error.reason) {
+        errorMessage += error.reason;
       } else {
         errorMessage += error.message || "Unknown error occurred";
       }
 
       const errorElement = document.createElement("div");
       errorElement.className =
-        "fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg";
+        "fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50";
       errorElement.textContent = errorMessage;
       document.body.appendChild(errorElement);
       setTimeout(() => errorElement.remove(), 5000);
@@ -413,157 +490,228 @@ export default function SwapCard({
   }, [inputAmount, selectedTokenIn, selectedTokenOut]);
 
   return (
-    <div className="bg-[#191B1F] rounded-3xl p-4 max-w-[480px] w-full mx-auto">
-      {/* Token Input Section */}
-      <div className="bg-[#212429] rounded-2xl p-4 mb-2">
-        <div className="flex justify-between mb-2">
-          <span className="text-gray-400">From</span>
-          <span className="text-gray-400">
-            Balance: {parseFloat(tokenInBalance).toFixed(6)}{" "}
-            {selectedTokenIn.symbol}
-          </span>
-        </div>
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={inputAmount}
-            onChange={(e) => setInputAmount(e.target.value)}
-            placeholder="0.0"
-            className="bg-transparent text-2xl text-white w-full focus:outline-none"
-          />
-          <button
-            onClick={() => {
-              setModalType("in");
-              setIsModalOpen(true);
-            }}
-            disabled
-            className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
-          >
-            <img
-              src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.webp`}
-              alt={selectedTokenIn.symbol}
-              className="w-6 h-6 rounded-full"
-            />
-            <span className="text-white">{selectedTokenIn.symbol}</span>
-            <svg
-              className="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Swap Icon */}
-      <div className="flex justify-center -my-2">
-        <button
-          onClick={() => {
-            setSelectedTokenIn(selectedTokenOut);
-            setSelectedTokenOut(selectedTokenIn);
-            setInputAmount("");
-            setOutputAmount("0");
-          }}
-          className="bg-[#212429] p-2 rounded-xl border border-[#191B1F] hover:border-gray-600"
-        >
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Token Output Section */}
-      <div className="bg-[#212429] rounded-2xl p-4 mt-2">
-        <div className="flex justify-between mb-2">
-          <span className="text-gray-400">To</span>
-          <span className="text-gray-400">
-            Balance: {parseFloat(tokenOutBalance).toFixed(6)}{" "}
-            {selectedTokenOut.symbol}
-          </span>
-        </div>
-        <div className="flex items-center">
-          <input
-            type="text"
-            value={outputAmount}
-            readOnly
-            placeholder="0.0"
-            className="bg-transparent text-2xl text-white w-full focus:outline-none"
-          />
-          <button
-            onClick={() => {
-              setModalType("out");
-              setIsModalOpen(true);
-            }}
-            className="flex items-center space-x-2 bg-[#191B1F] px-3 py-1 rounded-full hover:bg-opacity-80"
-          >
-            <img
-              src={`/tokens/${selectedTokenOut.symbol.toLowerCase()}.svg `}
-              alt={selectedTokenOut.symbol}
-              className="w-6 h-6 rounded-full"
-            />
-            <span className="text-white">{selectedTokenOut.symbol}</span>
-            <svg
-              className="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Price Info */}
-      {inputAmount && outputAmount !== "0" && (
-        <div className="mt-4 bg-[#212429] rounded-xl p-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Price</span>
-            <span className="text-white">
-              1 {selectedTokenIn.symbol} ={" "}
-              {(parseFloat(outputAmount) / parseFloat(inputAmount)).toFixed(6)}{" "}
-              {selectedTokenOut.symbol}
-            </span>
+    <div className="w-full max-w-md mx-auto">
+      {/* Swap Card */}
+      <div className="bg-dark-bg-elevated/90 backdrop-blur-xl rounded-2xl border border-dark-border shadow-elevated overflow-hidden">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-dark-text">Swap Tokens</h2>
+            <button className="p-2 text-dark-text-muted hover:text-dark-text rounded-lg hover:bg-dark-surface transition-colors">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </button>
           </div>
-        </div>
-      )}
 
-      {/* Swap Button */}
-      <button
-        onClick={handleSwap}
-        disabled={isLoading || !inputAmount || outputAmount === "0"}
-        className={`w-full mt-4 py-4 rounded-2xl text-lg font-medium ${
-          isLoading || !inputAmount || outputAmount === "0"
-            ? "bg-[#8A2BE2] opacity-60 cursor-not-allowed"
-            : "bg-[#8A2BE2] hover:bg-opacity-90"
-        } text-white`}
-      >
-        {isLoading
-          ? "Swapping..."
-          : `Swap ${selectedTokenIn.symbol} for ${selectedTokenOut.symbol}`}
-      </button>
+          {/* From Token Section */}
+          <div className="space-y-4">
+            <div className="bg-dark-surface rounded-xl p-4 border border-dark-border-light">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-dark-text-muted">
+                  From
+                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-dark-text-muted">
+                    Balance: {parseFloat(tokenInBalance).toFixed(4)}
+                  </span>
+                  {parseFloat(tokenInBalance) > 0 && (
+                    <button
+                      onClick={() => setInputAmount(tokenInBalance)}
+                      className="text-xs font-medium bg-brand-primary text-white px-2 py-1 rounded-md hover:bg-brand-primary-dark transition-colors"
+                    >
+                      MAX
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={inputAmount}
+                    onChange={(e) => setInputAmount(e.target.value)}
+                    placeholder="0.0"
+                    className="w-full text-3xl font-bold bg-transparent text-dark-text placeholder-dark-text-muted focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setModalType("in");
+                    setIsModalOpen(true);
+                  }}
+                  className="flex items-center space-x-2 bg-dark-bg-tertiary border border-dark-border-light rounded-xl px-4 py-3 hover:bg-dark-surface transition-colors shadow-card"
+                >
+                  <img
+                    src={`/tokens/${selectedTokenIn.symbol.toLowerCase()}.svg`}
+                    alt={selectedTokenIn.symbol}
+                    className="w-6 h-6 rounded-full"
+                    onError={(e) => {
+                      e.target.src = "/tokens/hashira.jpg";
+                      e.target.onerror = null;
+                    }}
+                  />
+                  <span className="font-semibold text-dark-text">
+                    {selectedTokenIn.symbol}
+                  </span>
+                  <svg
+                    className="w-4 h-4 text-dark-text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Swap Direction Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  setSelectedTokenIn(selectedTokenOut);
+                  setSelectedTokenOut(selectedTokenIn);
+                  setInputAmount("");
+                  setOutputAmount("0");
+                }}
+                className="p-3 bg-dark-surface border border-dark-border-light rounded-xl hover:bg-dark-surface-hover transition-colors group shadow-card"
+              >
+                <svg
+                  className="w-5 h-5 text-dark-text-muted group-hover:text-brand-primary transform group-hover:rotate-180 transition-all duration-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* To Token Section */}
+            <div className="bg-dark-surface rounded-xl p-4 border border-dark-border-light">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-dark-text-muted">
+                  To
+                </span>
+                <span className="text-sm text-dark-text-muted">
+                  Balance: {parseFloat(tokenOutBalance).toFixed(4)}
+                </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={outputAmount}
+                    readOnly
+                    placeholder="0.0"
+                    className="w-full text-3xl font-bold bg-transparent text-dark-text placeholder-dark-text-muted focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setModalType("out");
+                    setIsModalOpen(true);
+                  }}
+                  className="flex items-center space-x-2 bg-dark-bg-tertiary border border-dark-border-light rounded-xl px-4 py-3 hover:bg-dark-surface transition-colors shadow-card"
+                >
+                  <img
+                    src={`/tokens/${selectedTokenOut.symbol.toLowerCase()}.svg`}
+                    alt={selectedTokenOut.symbol}
+                    className="w-6 h-6 rounded-full"
+                    onError={(e) => {
+                      e.target.src = "/tokens/hashira.jpg";
+                      e.target.onerror = null;
+                    }}
+                  />
+                  <span className="font-semibold text-dark-text">
+                    {selectedTokenOut.symbol}
+                  </span>
+                  <svg
+                    className="w-4 h-4 text-dark-text-muted"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Price Info */}
+          {inputAmount && outputAmount !== "0" && (
+            <div className="mt-6 p-4 bg-brand-primary/5 rounded-xl border border-brand-primary/20">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-dark-text-muted">Exchange Rate</span>
+                <span className="font-semibold text-brand-primary">
+                  1 {selectedTokenIn.symbol} ={" "}
+                  {(parseFloat(outputAmount) / parseFloat(inputAmount)).toFixed(
+                    6
+                  )}{" "}
+                  {selectedTokenOut.symbol}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Swap Button */}
+          <button
+            onClick={handleSwap}
+            disabled={isLoading || !inputAmount || outputAmount === "0"}
+            className={`w-full mt-6 py-4 rounded-xl text-lg font-bold transition-all duration-200 ${
+              isLoading || !inputAmount || outputAmount === "0"
+                ? "bg-dark-surface text-dark-text-disabled cursor-not-allowed"
+                : "bg-brand-gradient hover:opacity-90 text-white shadow-glow hover:shadow-lg transform hover:-translate-y-0.5"
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                Processing...
+              </div>
+            ) : !inputAmount ? (
+              "Enter Amount"
+            ) : outputAmount === "0" ? (
+              "Invalid Pair"
+            ) : (
+              `Swap ${selectedTokenIn.symbol} → ${selectedTokenOut.symbol}`
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Token Selection Modal */}
       <TokenModal

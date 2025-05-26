@@ -1,16 +1,274 @@
-/* // styles/globals.css */
+/* Professional DeFi Trading Platform Styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-[#191B1F];
+/* Font imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-dark-bg text-dark-text antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+    overflow-x: hidden;
+  }
+
+  /* Professional scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-surface rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-surface-hover;
+  }
+
+  /* Hide scrollbar utility */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Selection styles */
+  ::selection {
+    @apply bg-brand-primary/20 text-brand-primary;
+  }
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+/* Professional component styles */
+@layer components {
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-brand-gradient hover:opacity-90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-glow hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-surface hover:bg-dark-surface-hover text-dark-text font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-dark-border-light;
+  }
+
+  .btn-ghost {
+    @apply text-dark-text-secondary hover:text-dark-text hover:bg-dark-surface font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+
+  /* Professional card styles */
+  .card {
+    @apply bg-dark-bg-elevated/90 backdrop-blur-xl rounded-2xl border border-dark-border shadow-card;
+  }
+
+  .card-elevated {
+    @apply bg-dark-bg-elevated/95 backdrop-blur-xl rounded-2xl border border-dark-border shadow-elevated;
+  }
+
+  .card-glass {
+    @apply bg-dark-surface/50 backdrop-blur-xl rounded-2xl border border-dark-border-light;
+  }
+
+  /* Professional input styles */
+  .input-primary {
+    @apply bg-dark-surface border border-dark-border-light text-dark-text rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-all placeholder-dark-text-muted;
+  }
+
+  .input-large {
+    @apply bg-transparent text-3xl font-bold text-dark-text placeholder-dark-text-muted focus:outline-none w-full;
+  }
+
+  /* Status indicators */
+  .status-success {
+    @apply bg-status-success-bg border border-status-success/30 text-status-success;
+  }
+
+  .status-error {
+    @apply bg-status-error-bg border border-status-error/30 text-status-error;
+  }
+
+  .status-warning {
+    @apply bg-status-warning-bg border border-status-warning/30 text-status-warning;
+  }
+
+  /* Professional animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+  }
 }
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+/* Professional utilities */
+@layer utilities {
+
+  /* Glass morphism effects */
+  .glass {
+    backdrop-filter: blur(20px);
+    @apply bg-dark-surface/30 border border-dark-border-light/50;
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(24px);
+    @apply bg-dark-bg-elevated/80 border border-dark-border;
+  }
+
+  /* Gradient text effects */
+  .gradient-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  .gradient-text-success {
+    @apply bg-success-gradient bg-clip-text text-transparent;
+  }
+
+  /* Professional shadows */
+  .shadow-professional {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .shadow-glow-brand {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Interactive states */
+  .interactive {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer;
+  }
+
+  .interactive-scale {
+    @apply transition-transform duration-200 hover:scale-105 cursor-pointer;
+  }
+
+  /* Focus states */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 focus:ring-offset-dark-bg;
+  }
+
+  /* Text utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent;
+  }
+}
+
+/* Professional animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Professional loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Remove transitions for reduced motion users */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -3,15 +3,15 @@
 import { useWeb3 } from "../context/Web3Context";
 
 export default function Header() {
-  const { account, connectWallet, isConnecting } = useWeb3();
+  const { account, connectWallet, isConnecting, network } = useWeb3();
 
   return (
-    <header className="backdrop-blur-md bg-white/5 border-b border-white/10">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-dark-bg-secondary/80 border-b border-dark-border shadow-elevated">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-gradient rounded-xl flex items-center justify-center shadow-glow">
               <svg
                 className="w-6 h-6 text-white"
                 fill="none"
@@ -27,28 +27,32 @@ export default function Header() {
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">HashiraSwap</h1>
-              <p className="text-xs text-gray-400">Decentralized Exchange</p>
+              <h1 className="text-xl font-bold text-dark-text tracking-tight">
+                HashiraSwap
+              </h1>
+              <div className="text-xs text-dark-text-muted font-medium">
+                Professional DeFi
+              </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-1">
             <a
               href="#"
-              className="text-white hover:text-blue-400 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-brand-primary bg-brand-primary/10 rounded-lg border border-brand-primary/20 transition-all hover:bg-brand-primary/20"
             >
               Swap
             </a>
             <a
               href="#"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm font-medium text-dark-text-secondary hover:text-dark-text rounded-lg hover:bg-dark-surface transition-all"
             >
               Pool
             </a>
             <a
               href="#"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm font-medium text-dark-text-secondary hover:text-dark-text rounded-lg hover:bg-dark-surface transition-all"
             >
               Analytics
             </a>
@@ -56,16 +60,25 @@ export default function Header() {
 
           {/* Wallet Connection */}
           <div className="flex items-center space-x-3">
+            {network && (
+              <div className="hidden sm:flex items-center px-3 py-2 bg-status-success-bg rounded-lg border border-status-success/30">
+                <div className="w-2 h-2 bg-status-success rounded-full mr-2 animate-pulse"></div>
+                <span className="text-xs font-medium text-status-success">
+                  {network.name || "Connected"}
+                </span>
+              </div>
+            )}
+
             {account ? (
-              <div className="flex items-center space-x-3">
-                <div className="hidden sm:block bg-black/20 rounded-lg px-3 py-2">
-                  <span className="text-white text-sm font-mono">
+              <div className="flex items-center space-x-2">
+                <div className="bg-dark-surface rounded-lg px-4 py-2 border border-dark-border-light shadow-card">
+                  <span className="text-sm font-mono text-dark-text">
                     {account.slice(0, 6)}...{account.slice(-4)}
                   </span>
                 </div>
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-status-success rounded-lg flex items-center justify-center shadow-glow-success">
                   <svg
-                    className="w-4 h-4 text-white"
+                    className="w-5 h-5 text-white"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -81,9 +94,16 @@ export default function Header() {
               <button
                 onClick={connectWallet}
                 disabled={isConnecting}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 text-sm"
+                className="bg-brand-gradient hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 text-sm shadow-glow hover:shadow-lg transform hover:-translate-y-0.5 animate-pulse-glow"
               >
-                {isConnecting ? "Connecting..." : "Connect"}
+                {isConnecting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    Connecting...
+                  </div>
+                ) : (
+                  "Connect Wallet"
+                )}
               </button>
             )}
           </div>
