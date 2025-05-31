@@ -179,8 +179,6 @@ export const TOKENS = {
   },
 };
 
-
-
 // | 🏷️ **Category**         | 🪙 **Example Tokens**        | 🎯 **Use Case**                                                         | 🔁 **Analogy**                                                      |
 // | ------------------------ | ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
 // | **1. Native Wrapped**    | WETH                         | Wrap native ETH to use it in ERC-20 DEX swaps                           | Wrapping cash as a prepaid card to use in vending machines          |

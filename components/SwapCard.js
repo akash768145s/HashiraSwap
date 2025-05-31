@@ -73,29 +73,127 @@ export default function SwapCard({
     if (!uniswapRouter || !amountIn || !selectedTokenIn || !selectedTokenOut)
       return;
 
+    // Don't quote if same token
+    if (selectedTokenIn.address === selectedTokenOut.address) {
+      setOutputAmount("0");
+      return;
+    }
+
+    // Check if we're on the right network
+    if (network && network.chainId !== 1) {
+      console.log("Not on Ethereum mainnet, chainId:", network.chainId);
+      setOutputAmount("0");
+      return;
+    }
+
     try {
       const amountInWei = ethers.utils.parseUnits(
         amountIn.toString(),
         selectedTokenIn.decimals
       );
 
-      const path = [selectedTokenIn.address, selectedTokenOut.address];
+      // Build path with better routing logic
+      let path = [selectedTokenIn.address, selectedTokenOut.address];
+
+      // If neither token is WETH, route through WETH
       if (
         selectedTokenIn.address !== TOKENS.WETH.address &&
         selectedTokenOut.address !== TOKENS.WETH.address
       ) {
-        // If neither token is WETH, route through WETH
-        path.splice(1, 0, TOKENS.WETH.address);
+        path = [
+          selectedTokenIn.address,
+          TOKENS.WETH.address,
+          selectedTokenOut.address,
+        ];
       }
 
-      const amounts = await uniswapRouter.getAmountsOut(amountInWei, path);
+      console.log(
+        "Getting quote for path:",
+        path.map((addr) => {
+          const token = Object.values(TOKENS).find((t) => t.address === addr);
+          return token ? token.symbol : addr;
+        })
+      );
+
+      // Try to get amounts with retry logic
+      let amounts;
+      try {
+        amounts = await uniswapRouter.getAmountsOut(amountInWei, path);
+      } catch (error) {
+        console.log("Direct path failed, trying alternative routes...");
+
+        // Try alternative paths through major tokens
+        const alternativePaths = [
+          // Through USDC
+          [
+            selectedTokenIn.address,
+            TOKENS.USDC.address,
+            selectedTokenOut.address,
+          ],
+          // Through USDT
+          [
+            selectedTokenIn.address,
+            TOKENS.USDT.address,
+            selectedTokenOut.address,
+          ],
+          // Through DAI
+          [
+            selectedTokenIn.address,
+            TOKENS.DAI.address,
+            selectedTokenOut.address,
+          ],
+        ];
+
+        for (const altPath of alternativePaths) {
+          try {
+            console.log(
+              "Trying alternative path:",
+              altPath.map((addr) => {
+                const token = Object.values(TOKENS).find(
+                  (t) => t.address === addr
+                );
+                return token ? token.symbol : addr;
+              })
+            );
+            amounts = await uniswapRouter.getAmountsOut(amountInWei, altPath);
+            path = altPath; // Update path if successful
+            break;
+          } catch (altError) {
+            console.log("Alternative path failed:", altError.message);
+            continue;
+          }
+        }
+
+        if (!amounts) {
+          throw new Error("No valid trading path found");
+        }
+      }
+
       const outputAmountFormatted = ethers.utils.formatUnits(
         amounts[amounts.length - 1],
         selectedTokenOut.decimals
       );
+
+      console.log("Quote successful:", {
+        input: `${amountIn} ${selectedTokenIn.symbol}`,
+        output: `${outputAmountFormatted} ${selectedTokenOut.symbol}`,
+        path: path.map((addr) => {
+          const token = Object.values(TOKENS).find((t) => t.address === addr);
+          return token ? token.symbol : addr;
+        }),
+      });
+
       setOutputAmount(outputAmountFormatted);
     } catch (error) {
       console.error("Error getting quote:", error);
+      console.log("Quote failed for:", {
+        tokenIn: selectedTokenIn.symbol,
+        tokenOut: selectedTokenOut.symbol,
+        amount: amountIn,
+        error: error.message,
+        network: network?.name,
+        chainId: network?.chainId,
+      });
       setOutputAmount("0");
     }
   };
@@ -378,27 +476,75 @@ export default function SwapCard({
         }
       }
 
-      // Setup swap parameters
-      const path = [selectedTokenIn.address, selectedTokenOut.address];
+      // Setup swap parameters with improved routing
+      let path = [selectedTokenIn.address, selectedTokenOut.address];
 
       // If neither token is WETH, route through WETH
       if (
         selectedTokenIn.address !== TOKENS.WETH.address &&
         selectedTokenOut.address !== TOKENS.WETH.address
       ) {
-        path.splice(1, 0, TOKENS.WETH.address);
+        path = [
+          selectedTokenIn.address,
+          TOKENS.WETH.address,
+          selectedTokenOut.address,
+        ];
       }
 
       const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
 
-      // Get amounts with retry logic
+      // Get amounts with retry logic and alternative paths
       let amounts;
       try {
         amounts = await uniswapRouter.getAmountsOut(amountIn, path);
       } catch (error) {
-        console.error("First attempt failed, retrying...");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        amounts = await uniswapRouter.getAmountsOut(amountIn, path);
+        console.log("Direct path failed in swap, trying alternative routes...");
+
+        // Try alternative paths through major tokens
+        const alternativePaths = [
+          // Through USDC
+          [
+            selectedTokenIn.address,
+            TOKENS.USDC.address,
+            selectedTokenOut.address,
+          ],
+          // Through USDT
+          [
+            selectedTokenIn.address,
+            TOKENS.USDT.address,
+            selectedTokenOut.address,
+          ],
+          // Through DAI
+          [
+            selectedTokenIn.address,
+            TOKENS.DAI.address,
+            selectedTokenOut.address,
+          ],
+        ];
+
+        for (const altPath of alternativePaths) {
+          try {
+            console.log(
+              "Trying alternative swap path:",
+              altPath.map((addr) => {
+                const token = Object.values(TOKENS).find(
+                  (t) => t.address === addr
+                );
+                return token ? token.symbol : addr;
+              })
+            );
+            amounts = await uniswapRouter.getAmountsOut(amountIn, altPath);
+            path = altPath; // Update path if successful
+            break;
+          } catch (altError) {
+            console.log("Alternative swap path failed:", altError.message);
+            continue;
+          }
+        }
+
+        if (!amounts) {
+          throw new Error("No valid trading path found for swap");
+        }
       }
 
       const minOutput = amounts[amounts.length - 1].mul(995).div(1000); // 0.5% slippage
@@ -497,28 +643,53 @@ export default function SwapCard({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-dark-text">Swap Tokens</h2>
-            <button className="p-2 text-dark-text-muted hover:text-dark-text rounded-lg hover:bg-dark-surface transition-colors">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
           </div>
+
+          {/* Network Warning */}
+          {network && network.chainId !== 1 && (
+            <div className="mb-6 p-4 bg-status-warning-bg border border-status-warning/30 rounded-xl">
+              <div className="flex items-center mb-2">
+                <svg
+                  className="w-5 h-5 text-status-warning mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <span className="font-semibold text-status-warning">
+                  Wrong Network
+                </span>
+              </div>
+              <p className="text-sm text-status-warning mb-3">
+                You&apos;re connected to{" "}
+                <span className="font-mono">
+                  {network.name || `Chain ID ${network.chainId}`}
+                </span>
+                . HashiraSwap only works on Ethereum Mainnet.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    await window.ethereum.request({
+                      method: "wallet_switchEthereumChain",
+                      params: [{ chainId: "0x1" }], // Ethereum mainnet
+                    });
+                  } catch (error) {
+                    console.error("Failed to switch network:", error);
+                  }
+                }}
+                className="bg-status-warning text-dark-bg px-4 py-2 rounded-lg font-semibold hover:bg-status-warning/90 transition-colors"
+              >
+                Switch to Ethereum Mainnet
+              </button>
+            </div>
+          )}
 
           {/* From Token Section */}
           <div className="space-y-4">
@@ -690,9 +861,19 @@ export default function SwapCard({
           {/* Swap Button */}
           <button
             onClick={handleSwap}
-            disabled={isLoading || !inputAmount || outputAmount === "0"}
+            disabled={
+              isLoading ||
+              !inputAmount ||
+              outputAmount === "0" ||
+              selectedTokenIn.address === selectedTokenOut.address ||
+              (network && network.chainId !== 1)
+            }
             className={`w-full mt-6 py-4 rounded-xl text-lg font-bold transition-all duration-200 ${
-              isLoading || !inputAmount || outputAmount === "0"
+              isLoading ||
+              !inputAmount ||
+              outputAmount === "0" ||
+              selectedTokenIn.address === selectedTokenOut.address ||
+              (network && network.chainId !== 1)
                 ? "bg-dark-surface text-dark-text-disabled cursor-not-allowed"
                 : "bg-brand-gradient hover:opacity-90 text-white shadow-glow hover:shadow-lg transform hover:-translate-y-0.5"
             }`}
@@ -704,8 +885,12 @@ export default function SwapCard({
               </div>
             ) : !inputAmount ? (
               "Enter Amount"
+            ) : network && network.chainId !== 1 ? (
+              "Switch to Ethereum Mainnet"
+            ) : selectedTokenIn.address === selectedTokenOut.address ? (
+              "Select Different Tokens"
             ) : outputAmount === "0" ? (
-              "Invalid Pair"
+              "No Liquidity Available"
             ) : (
               `Swap ${selectedTokenIn.symbol} → ${selectedTokenOut.symbol}`
             )}

@@ -31,32 +31,19 @@ export default function Header() {
                 HashiraSwap
               </h1>
               <div className="text-xs text-dark-text-muted font-medium">
-                Professional DeFi
+                Professional DeFi Trading
               </div>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <a
-              href="#"
-              className="px-4 py-2 text-sm font-medium text-brand-primary bg-brand-primary/10 rounded-lg border border-brand-primary/20 transition-all hover:bg-brand-primary/20"
-            >
-              Swap
-            </a>
-            <a
-              href="#"
-              className="px-4 py-2 text-sm font-medium text-dark-text-secondary hover:text-dark-text rounded-lg hover:bg-dark-surface transition-all"
-            >
-              Pool
-            </a>
-            <a
-              href="#"
-              className="px-4 py-2 text-sm font-medium text-dark-text-secondary hover:text-dark-text rounded-lg hover:bg-dark-surface transition-all"
-            >
-              Analytics
-            </a>
-          </nav>
+          {/* Center Badge */}
+          <div className="hidden md:flex items-center">
+            <div className="px-4 py-2 bg-brand-primary/10 border border-brand-primary/20 rounded-full">
+              <span className="text-sm font-medium text-brand-primary">
+                Decentralized Exchange
+              </span>
+            </div>
+          </div>
 
           {/* Wallet Connection */}
           <div className="flex items-center space-x-3">
