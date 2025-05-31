@@ -1,25 +1,35 @@
-# HashiraSwap
+# HashiraSwap 🗲
 
-A modern decentralized exchange (DEX) built on Uniswap V2 with Next.js 15 and the App Router.
+A professional decentralized exchange (DEX) built on Uniswap V2 with Next.js 15, featuring institutional-grade UI and seamless Web3 integration.
 
-## 🚀 Features
+## 🌟 Features
 
-- **Next.js 15** with App Router for optimal performance
-- **Web3 Integration** with MetaMask wallet connection
-- **Uniswap V2** integration for token swapping
-- **Modern UI** with Tailwind CSS and glassmorphism design
-- **TypeScript Ready** for type safety
-- **Responsive Design** for mobile and desktop
+- **🚀 Modern Architecture**: Next.js 15 with App Router and `src/` directory structure
+- **💼 Professional UI**: Satoshi font family with glassmorphism design
+- **🔗 Web3 Integration**: MetaMask wallet connection with auto-reconnection
+- **🔄 Token Swapping**: Real-time quotes via Uniswap V2 with slippage protection
+- **📱 Responsive Design**: Mobile-first approach with Tailwind CSS
+- **⚡ Performance Optimized**: Fast loading with optimized bundle size
 
 ## 🛠️ Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
-- **Styling**: Tailwind CSS
-- **Web3**: Ethers.js v5
-- **Blockchain**: Ethereum Mainnet
-- **DEX Protocol**: Uniswap V2
+| Category         | Technology                              |
+| ---------------- | --------------------------------------- |
+| **Frontend**     | Next.js 15, React 19, TypeScript        |
+| **Styling**      | Tailwind CSS, Custom CSS                |
+| **Web3**         | Ethers.js v5, MetaMask                  |
+| **Blockchain**   | Ethereum Mainnet, Hardhat (development) |
+| **DEX Protocol** | Uniswap V2                              |
 
-## 📦 Installation
+## 📦 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- MetaMask browser extension
+- Git
+
+### Installation
 
 1. **Clone the repository**
 
@@ -34,102 +44,229 @@ A modern decentralized exchange (DEX) built on Uniswap V2 with Next.js 15 and th
    npm install
    ```
 
-3. **Run the development server**
+3. **Set up environment variables** (see [Environment Setup](#-environment-setup))
+
+4. **Run development server**
 
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🔧 Environment Setup
+
+### Required Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Alchemy API (Required for mainnet forking)
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_api_key_here
+
+# Commission Settings (Optional - for fee collection)
+NEXT_PUBLIC_COMMISSION_ADDRESS=0x1234567890123456789012345678901234567890
+NEXT_PUBLIC_COMMISSION_RATE=0.0001
+
+# Development Settings (Optional)
+NEXT_PUBLIC_NETWORK=mainnet
+```
+
+### How to Get API Keys
+
+#### 1. Alchemy API Key (Recommended)
+
+1. Go to [Alchemy](https://www.alchemy.com/)
+2. Sign up for a free account
+3. Create a new app
+4. Select "Ethereum" → "Mainnet"
+5. Copy your API key
+
+### Environment File Example
+
+```env
+# .env.local
+NEXT_PUBLIC_ALCHEMY_API_KEY=alch_1234567890abcdef1234567890abcdef
+NEXT_PUBLIC_COMMISSION_ADDRESS=0x1234567890123456789012345678901234567890
+NEXT_PUBLIC_COMMISSION_RATE=0.0001
+```
+
+## 🧪 Testing & Development
+
+### Option 1: Hardhat Local Fork (Recommended for Testing)
+
+This method creates a local blockchain fork with real mainnet data and gives you test ETH.
+
+1. **Start Hardhat fork**
+
+   ```bash
+   npm run fork
+   ```
+
+   This starts a local blockchain at `http://localhost:8545` with 10,000 ETH in test accounts.
+
+2. **In a new terminal, start the app**
+
+   ```bash
+   npm run dev
+   ```
+
+3. **Configure MetaMask for local testing**
+
+   **Method 1: Manual Network Addition**
+
+   - Network Name: `Ethereum Mainnet (Fork)`
+   - RPC URL: `http://127.0.0.1:8545`
+   - Chain ID: `1` (Important: Use 1, not 31337 for forked mainnet)
+   - Currency Symbol: `ETH`
+   - Block Explorer URL: `https://etherscan.io` (optional)
+
+
+4. **Import a test account**
+   Use one of these pre-funded private keys:
+
+   ```
+   0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+   0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
+   ```
+
+5. **Run both fork and dev server together**
+   ```bash
+   npm run fork:dev
+   ```
+
+### Option 2: Testnet (Sepolia)
+
+1. **Get Sepolia ETH**
+
+   - [Alchemy Sepolia Faucet](https://sepoliafaucet.com/)
+   - [Chainlink Sepolia Faucet](https://faucets.chain.link/sepolia)
+
+2. **Switch to Sepolia in MetaMask**
+   - Network: Sepolia Test Network
+   - You'll need to modify the app to support Sepolia (currently mainnet only)
+
+### Option 3: Mainnet (Real Trading)
+
+⚠️ **Warning**: This uses real ETH and tokens. Only use small amounts for testing.
+
+1. **Get ETH**
+
+   - Buy from exchanges (Coinbase, Binance, etc.)
+   - Bridge from other networks
+
+2. **Connect MetaMask to Ethereum Mainnet**
 
 ## 🏗️ Project Structure
 
 ```
 hashiraswap/
-├── app/                    # Next.js 15 App Router
-│   ├── layout.js          # Root layout component
-│   ├── page.js            # Home page
-│   ├── loading.js         # Loading UI
-│   └── error.js           # Error UI
-├── components/            # Reusable React components
-├── constants/             # Blockchain constants
-│   ├── abis.js           # Smart contract ABIs
-│   ├── addresses.js      # Contract and token addresses
-│   └── README.md         # Constants documentation
-├── context/               # React contexts
-│   ├── Web3Context.js    # Web3 state management
-│   └── README.md         # Context documentation
-├── styles/               # Global styles
-│   └── globals.css       # Tailwind CSS imports
-└── public/               # Static assets
+├── src/                          # Source code (Next.js 13+ convention)
+│   ├── app/                      # App Router pages
+│   │   ├── layout.jsx           # Root layout with Satoshi font
+│   │   ├── page.jsx             # Home page with integrated header
+│   │   ├── loading.jsx          # Loading UI
+│   │   └── error.jsx            # Error boundary
+│   ├── components/              # React components
+│   │   ├── SwapCard.jsx         # Main trading interface
+│   │   ├── WalletConnect.jsx    # Wallet connection UI
+│   │   ├── TokenModal.jsx       # Token selection modal
+│   │   └── index.js             # Component exports
+│   └── context/                 # React contexts
+│       └── Web3Context.jsx      # Web3 state management
+├── constants/                   # Blockchain constants
+│   ├── abis.js                 # Smart contract ABIs
+│   └── addresses.js            # Contract and token addresses
+├── styles/                     # Styling
+│   └── globals.css             # Global styles with Satoshi font
+├── public/                     # Static assets
+│   ├── fonts/                  # Satoshi font files
+│   └── tokens/                 # Token icons
+├── hardhat.config.js           # Hardhat configuration
+└── package.json               # Dependencies and scripts
 ```
 
-## 🌐 Web3 Features
+## 🎯 Available Scripts
 
-### Wallet Connection
+| Command            | Description                      |
+| ------------------ | -------------------------------- |
+| `npm run dev`      | Start development server         |
+| `npm run build`    | Build for production             |
+| `npm run start`    | Start production server          |
+| `npm run lint`     | Run ESLint                       |
+| `npm run fork`     | Start Hardhat mainnet fork       |
+| `npm run fork:dev` | Run fork and dev server together |
 
-- MetaMask integration
-- Auto-reconnection on page refresh
-- Account switching support
-- Network change handling
+## 🪙 Supported Tokens
 
-### Smart Contract Integration
+### Stablecoins
 
-- Uniswap V2 Router contract
-- ERC-20 token contracts
-- Real-time balance updates
-- Transaction state management
+- **USDT** - Tether USD
+- **USDC** - USD Coin
+- **DAI** - Dai Stablecoin
+- **BUSD** - Binance USD
 
-### Supported Tokens
+### DeFi Tokens
 
-- **Stablecoins**: USDT, USDC, DAI, BUSD
-- **DeFi Tokens**: UNI, AAVE, LINK, CRV, COMP
-- **Layer 2**: MATIC, ARB, OP
-- **Gaming**: SAND, MANA
-- **Meme**: SHIB, PEPE
-- **Others**: MKR, SNX, GRT, LDO, RPL, FXS
+- **UNI** - Uniswap
+- **AAVE** - Aave
+- **LINK** - Chainlink
+- **COMP** - Compound
+- **CRV** - Curve DAO
 
-## 🚀 Scripts
+### Layer 2 & Scaling
 
-- **Development**: `npm run dev` - Start development server
-- **Build**: `npm run build` - Build for production
-- **Start**: `npm start` - Start production server
-- **Lint**: `npm run lint` - Run ESLint
+- **MATIC** - Polygon
+- **ARB** - Arbitrum
+- **OP** - Optimism
 
-## 🔧 Configuration
+### Gaming & NFT
 
-### Environment Variables
+- **SAND** - The Sandbox
+- **MANA** - Decentraland
 
-Create a `.env.local` file:
+## 🔐 Security Features
 
-```env
-NEXT_PUBLIC_INFURA_ID=your_infura_project_id
-NEXT_PUBLIC_ALCHEMY_ID=your_alchemy_api_key
-```
+- ✅ No private keys stored
+- ✅ Client-side wallet connection only
+- ✅ Verified Uniswap V2 contract addresses
+- ✅ Slippage protection (0.5% default)
+- ✅ Transaction deadline limits (20 minutes)
+- ✅ Input validation and sanitization
+- ✅ Network verification (Ethereum Mainnet only)
 
-### Network Configuration
+## 🚨 Troubleshooting
 
-Currently configured for Ethereum Mainnet. To add other networks:
+### Common Issues
 
-1. Update `constants/addresses.js` with network-specific addresses
-2. Modify `context/Web3Context.js` to handle multiple networks
-3. Add network switching logic
+**1. "Please install MetaMask" error**
 
-## 📱 Usage
+- Install [MetaMask browser extension](https://metamask.io/)
+- Refresh the page after installation
 
-1. **Connect Wallet**: Click "Connect Wallet" to link your MetaMask
-2. **View Balance**: See your connected wallet address
-3. **Network Check**: Ensure you're on Ethereum Mainnet
-4. **Ready to Trade**: Wallet connected and ready for DEX features
+**2. "Wrong Network" warning**
 
-## 🛡️ Security
+- Switch MetaMask to Ethereum Mainnet
+- Or use Hardhat fork for testing
 
-- No private keys stored
-- Client-side wallet connection only
-- Verified contract addresses
-- Slippage protection
-- Transaction deadline limits
+**3. "Could not fetch chain ID" error when adding network**
+
+- Try `http://localhost:8545` instead of `http://127.0.0.1:8545`
+- Ensure Hardhat fork is running: `npm run fork`
+- Some firewalls block 127.0.0.1, try localhost instead
+- Clear MetaMask cache: Settings → Advanced → Reset Account
+
+**4. "Insufficient ETH balance" error**
+
+- For testing: Use Hardhat fork with pre-funded accounts
+- For mainnet: Ensure you have enough ETH for gas + swap amount
+
+**5. Transaction fails**
+
+- Check gas price isn't too high (>100 gwei)
+- Ensure sufficient token balance
+- Try increasing slippage tolerance
 
 ## 🤝 Contributing
 
@@ -138,6 +275,14 @@ Currently configured for Ethereum Mainnet. To add other networks:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow the existing code style
+- Add TypeScript types where applicable
+- Test with Hardhat fork before mainnet
+- Update documentation for new features
+- Ensure responsive design works on mobile
 
 ## 📄 License
 
@@ -149,38 +294,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Next.js](https://nextjs.org/) for the amazing framework
 - [Ethers.js](https://ethers.org/) for Web3 integration
 - [Tailwind CSS](https://tailwindcss.com/) for styling
-
-
----
+- [Satoshi Font](https://www.fontshare.com/fonts/satoshi) for typography
 
 **Built with ❤️ for the DeFi community**
 
-
-Console Error
-
-
-Error: Insufficient ETH balance. Need 2.0 ETH
-
-components\SwapCard.js (385:21) @ handleSwap
-
-
-  383 |               await tx.wait(1); // Wait for 1 confirmation
-  384 |             } else {
-> 385 |               throw new Error(
-      |                     ^
-  386 |                 `Insufficient ETH balance. Need ${ethers.utils.formatEther(
-  387 |                   totalNeeded
-  388 |                 )} ETH`
-
-how do i test the application i don't have eth in my account metamaks
-
-
-@https://sepolia-faucet.pk910.de/ 
-
-asking for 0.001 main met balance how to get to 
-
-
-i want to do it via hardhat private key method can you help me with that
-
-
-so that i can swap my tokens easierly
+_HashiraSwap - Professional DeFi Trading Platform_
