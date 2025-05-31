@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { UNISWAP_ROUTER_ABI } from "../constants/abis";
-import { UNISWAP_ADDRESSES } from "../constants/addresses";
+import { UNISWAP_ROUTER_ABI } from "../../constants/abis";
+import { UNISWAP_ADDRESSES } from "../../constants/addresses";
 
 // Create a React context for Web3 functionality
 const Web3Context = createContext();

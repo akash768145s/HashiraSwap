@@ -1,5 +1,5 @@
 import { Web3Provider } from "../context/Web3Context";
-import "../styles/globals.css";
+import "../../styles/globals.css";
 
 export const metadata = {
   title: "HashiraSwap - Professional DeFi Trading",
@@ -29,10 +29,9 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className="font-inter antialiased bg-dark-bg text-dark-text">
+      <body className="font-satoshi antialiased bg-dark-bg text-dark-text">
         <Web3Provider>{children}</Web3Provider>
       </body>
     </html>
   );
 }
- 

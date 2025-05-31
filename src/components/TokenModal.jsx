@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TOKENS } from "../constants/addresses";
+import { TOKENS } from "../../constants/addresses";
 
 const TOKEN_CATEGORIES = {
   POPULAR: ["WETH", "USDT", "USDC", "DAI"],

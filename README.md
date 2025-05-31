@@ -131,22 +131,6 @@ Currently configured for Ethereum Mainnet. To add other networks:
 - Slippage protection
 - Transaction deadline limits
 
-## 🎨 Design System
-
-### Colors
-
-- **Primary**: Blue to Purple gradient
-- **Background**: Dark gradient (blue → purple → pink)
-- **Glass**: White/10 with backdrop blur
-- **Text**: White, gray variants
-
-### Components
-
-- Glassmorphism cards
-- Gradient buttons
-- Loading spinners
-- Responsive layouts
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -166,10 +150,37 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Ethers.js](https://ethers.org/) for Web3 integration
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 
-## 📞 Support
-
-For support, email support@hashiraswap.com or join our Discord community.
 
 ---
 
 **Built with ❤️ for the DeFi community**
+
+
+Console Error
+
+
+Error: Insufficient ETH balance. Need 2.0 ETH
+
+components\SwapCard.js (385:21) @ handleSwap
+
+
+  383 |               await tx.wait(1); // Wait for 1 confirmation
+  384 |             } else {
+> 385 |               throw new Error(
+      |                     ^
+  386 |                 `Insufficient ETH balance. Need ${ethers.utils.formatEther(
+  387 |                   totalNeeded
+  388 |                 )} ETH`
+
+how do i test the application i don't have eth in my account metamaks
+
+
+@https://sepolia-faucet.pk910.de/ 
+
+asking for 0.001 main met balance how to get to 
+
+
+i want to do it via hardhat private key method can you help me with that
+
+
+so that i can swap my tokens easierly

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { TOKENS, UNISWAP_ADDRESSES } from "../constants/addresses";
+import { TOKENS, UNISWAP_ADDRESSES } from "../../constants/addresses";
 import TokenModal from "./TokenModal";
 
 const ERC20_ABI = [
@@ -630,8 +630,15 @@ export default function SwapCard({
   }, [account, selectedTokenIn, selectedTokenOut]);
 
   useEffect(() => {
-    if (inputAmount) {
+    if (
+      inputAmount &&
+      inputAmount.trim() !== "" &&
+      !isNaN(parseFloat(inputAmount)) &&
+      parseFloat(inputAmount) > 0
+    ) {
       getQuote(inputAmount);
+    } else {
+      setOutputAmount("0");
     }
   }, [inputAmount, selectedTokenIn, selectedTokenOut]);
 
