@@ -9,20 +9,12 @@ export default function WalletConnect() {
     <div className="bg-dark-bg-elevated/90 backdrop-blur-xl rounded-2xl border border-dark-border shadow-elevated overflow-hidden">
       <div className="p-8 text-center">
         {/* Icon */}
-        <div className="w-20 h-20 mx-auto mb-6 bg-brand-gradient rounded-2xl flex items-center justify-center shadow-glow">
-          <svg
-            className="w-10 h-10 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
+        <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+          <img
+            src="/metamask.png"
+            alt="MetaMask"
+            className="w-full h-full object-contain"
+          />
         </div>
 
         {/* Content */}
@@ -83,14 +75,12 @@ export default function WalletConnect() {
           {/* Supported Wallets */}
           <div className="flex justify-center space-x-6">
             <div className="flex items-center space-x-2 text-dark-text-muted text-sm">
-              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center shadow-card">
-                <svg
-                  className="w-5 h-5 text-white"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M22.08 12c0-5.52-4.48-10-10-10S2.08 6.48 2.08 12s4.48 10 10 10 10-4.48 10-10zM8.87 8.93c.19-.19.19-.51 0-.7-.19-.19-.51-.19-.7 0l-2.83 2.83c-.19.19-.19.51 0 .7l2.83 2.83c.19.19.51.19.7 0 .19-.19.19-.51 0-.7L6.34 12l2.53-2.53c.19-.19.19-.51 0-.7zm6.26 0c.19-.19.19-.51 0-.7-.19-.19-.51-.19-.7 0l-2.83 2.83c-.19.19-.19.51 0 .7l2.83 2.83c.19.19.51.19.7 0 .19-.19.19-.51 0-.7L12.6 12l2.53-2.53c.19-.19.19-.51 0-.7z" />
-                </svg>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-card overflow-hidden">
+                <img
+                  src="/metamask.png"
+                  alt="MetaMask"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="font-medium">MetaMask</span>
             </div>
