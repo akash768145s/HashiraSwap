@@ -438,8 +438,7 @@ export default function SwapCard({
           const tokenBalance = await tokenContract.balanceOf(account);
           if (tokenBalance.lt(amountIn)) {
             throw new Error(
-              `Insufficient ${
-                selectedTokenIn.symbol
+              `Insufficient ${selectedTokenIn.symbol
               } balance. You have ${ethers.utils.formatUnits(
                 tokenBalance,
                 selectedTokenIn.decimals
@@ -650,6 +649,22 @@ export default function SwapCard({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-dark-text">Swap Tokens</h2>
+          </div>
+
+          {/* Full Wallet Address - Collapsible */}
+          <div className="mb-4 p-3 bg-dark-surface rounded-lg border border-dark-border-light">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-dark-text-muted">Wallet Address</span>
+              <button
+                onClick={() => navigator.clipboard.writeText(account)}
+                className="text-xs text-brand-primary hover:text-brand-primary-dark transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+            <div className="mt-1 font-mono text-sm text-dark-text break-all">
+              {account}
+            </div>
           </div>
 
           {/* Network Warning */}
@@ -875,15 +890,14 @@ export default function SwapCard({
               selectedTokenIn.address === selectedTokenOut.address ||
               (network && network.chainId !== 1)
             }
-            className={`w-full mt-6 py-4 rounded-xl text-lg font-bold transition-all duration-200 ${
-              isLoading ||
+            className={`w-full mt-6 py-4 rounded-xl text-lg font-bold transition-all duration-200 ${isLoading ||
               !inputAmount ||
               outputAmount === "0" ||
               selectedTokenIn.address === selectedTokenOut.address ||
               (network && network.chainId !== 1)
-                ? "bg-dark-surface text-dark-text-disabled cursor-not-allowed"
-                : "bg-brand-gradient hover:opacity-90 text-white shadow-glow hover:shadow-lg transform hover:-translate-y-0.5"
-            }`}
+              ? "bg-dark-surface text-dark-text-disabled cursor-not-allowed"
+              : "bg-brand-gradient hover:opacity-90 text-white shadow-glow hover:shadow-lg transform hover:-translate-y-0.5"
+              }`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center">

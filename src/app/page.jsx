@@ -51,15 +51,28 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Network Status */}
-            {network && (
-              <div className="hidden sm:flex items-center px-3 py-2 bg-status-success-bg rounded-lg border border-status-success/30">
-                <div className="w-2 h-2 bg-status-success rounded-full mr-2 animate-pulse"></div>
-                <span className="text-xs font-medium text-status-success">
-                  {network.name || "Connected"}
-                </span>
-              </div>
-            )}
+            {/* Wallet & Network Status */}
+            <div className="flex items-center space-x-3">
+              {/* Wallet Address */}
+              {account && (
+                <div className="hidden md:flex items-center px-3 py-2 bg-dark-bg-tertiary rounded-lg border border-dark-border">
+                  <div className="w-2 h-2 bg-brand-primary rounded-full mr-2"></div>
+                  <span className="text-xs font-mono text-dark-text">
+                    {`${account.slice(0, 6)}...${account.slice(-4)}`}
+                  </span>
+                </div>
+              )}
+
+              {/* Network Status */}
+              {network && (
+                <div className="hidden sm:flex items-center px-3 py-2 bg-status-success-bg rounded-lg border border-status-success/30">
+                  <div className="w-2 h-2 bg-status-success rounded-full mr-2 animate-pulse"></div>
+                  <span className="text-xs font-medium text-status-success">
+                    {network.name || "Connected"}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
